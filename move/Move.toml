@@ -1,0 +1,17 @@
+[package]
+name = 'nft_staking'
+version = '1.0.0'
+
+[dependencies.AptosFramework]
+git = 'https://github.com/aptos-labs/aptos-core.git'
+rev = 'main'
+subdir = 'aptos-move/framework/aptos-framework'
+
+[dependencies.AptosToken]
+git = 'https://github.com/aptos-labs/aptos-core.git'
+rev = 'main'
+subdir = 'aptos-move/framework/aptos-token'
+
+
+[addresses]
+owner_addr = "2e0d7299a3b022726e16f4b3a91653ab09c95d9ca2350b41a45cffb7b5b69e55"
