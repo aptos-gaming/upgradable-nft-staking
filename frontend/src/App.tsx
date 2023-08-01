@@ -19,13 +19,14 @@ import CoinBalance from './components/CoinBalance'
 import { SelectedTokenProvider } from './context/SelectedTokenProvider'
 import { CollectionOwnerProvider } from './context/CollectionOwnerProvider'
 import { NftList } from './components/NftList'
+import CONFIG from './config.json'
 
-const APTOS_DEVNET_GRAPH = 'https://indexer-devnet.staging.gcp.aptosdev.com/v1/graphql'
+const APTOS_GRAPH = `https://indexer-${CONFIG.network}.staging.gcp.aptosdev.com/v1/graphql`
 
 function getGraphqlClient(): ApolloClient<NormalizedCacheObject> {
   return new ApolloClient({
     link: new HttpLink({
-      uri: APTOS_DEVNET_GRAPH,
+      uri: APTOS_GRAPH,
     }),
     cache: new InMemoryCache(),
   })

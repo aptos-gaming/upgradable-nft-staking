@@ -12,8 +12,12 @@ import CONFIG from "./config.json"
 
 const PackageName = "nft_staking";
 
-const client = new AptosClient("https://fullnode.devnet.aptoslabs.com/v1")
-const provider = new Provider(Network.DEVNET);
+const DevnetClientUrl = "https://fullnode.devnet.aptoslabs.com/v1"
+const TestnetClientUrl = "https://fullnode.testnet.aptoslabs.com"
+
+const client = new AptosClient(CONFIG.network === "devnet" ? DevnetClientUrl : TestnetClientUrl)
+const provider = new Provider(CONFIG.network === "devnet" ?  Network.DEVNET : Network.TESTNET);
+
 
 const RewardCoinType = `${CONFIG.moduleAddress}::mint_coins::${CONFIG.coinName}`
 

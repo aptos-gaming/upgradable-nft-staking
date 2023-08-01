@@ -28,7 +28,7 @@ interface RowItemProps {
   setSelectedToken: (data: any) => void;
 }
 
-const provider = new Provider(Network.DEVNET);
+const provider = new Provider(CONFIG.network === "devnet" ? Network.DEVNET : Network.TESTNET);
 
 export const AccountTokensWithDataQuery = gql
   `query AccountTokensWithDataQuery($owner_address: String, $collection_name: String) {

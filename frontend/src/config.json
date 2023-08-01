@@ -1,5 +1,6 @@
 {
-  "moduleAddress": "0x2e0d7299a3b022726e16f4b3a91653ab09c95d9ca2350b41a45cffb7b5b69e55",
+  "moduleAddress": "0x3f14e20d73e03c22e25950ac1c12f840c1c1509a24c85f1fae9271a949f00c99",
+  "network": "testnet",
   "collectionName": "Galactic Collection",
   "coinName": "Minerals"
 }
