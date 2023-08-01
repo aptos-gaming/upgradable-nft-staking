@@ -3,14 +3,13 @@
 1. Follow the official [Aptos CLI installation guide](https://aptos.dev/tools/install-cli/)
 2. Create new aptos account with `aptos init` (will create new folder .aptos and store public and private key in it)
 3. Import private_key from .aptos to Petra Extension
-4. Go to /move and put account (owner_addr) in `Move.toml` from `.aptos/config.yaml` 'account' field
-5. Mint Minerals coin and deploy 2 staking modules
-    Run `aptos move publish` in /move folder
-6. Go to main react app and change module address in `config.json` with account from `.aptos`
-7. Run main app `npm run start` and connect wallet and click on `Create Collection With Token Upgrade` button
-8. Click on `Init Minerals Staking` on Basic Token Staking tab or Upgradeble Token Staking tab.
-9. Connect new address to the UI and click on `Stake`
-10. You can also upgrade you token level using `Upgrade` button (but only in Upgrade Token Staking tab)
+4. Mint Minerals coin and deploy 2 staking modules using account (owner_addr) in `Move.toml` from `.aptos/config.yaml` 'account' field 
+    Run `aptos move publish --named-addresses owner_addr=account` in /move folder
+5. Go to main react app and change module address in `config.json` with account from `.aptos`
+6. Install all frontend dependecies in `/frontend` and then run main app `npm run start` and connect wallet and click on `Create Collection With Token Upgrade` button
+7. Click on `Init Minerals Staking` on Basic Token Staking tab or Upgradeble Token Staking tab.
+8. Connect new address to the UI and click on `Stake`
+9. You can also upgrade you token level using `Upgrade` button (but only in Upgrade Token Staking tab)
 
 To stake:
 1. Run Init Staking and confirm transaction
@@ -23,6 +22,10 @@ Modules
 - MintNFTs.move - module that create resource account, that creates collection and mint 10 nfts to owner address, also contains `upgrade_token` method
 - NftStaking.move - basic staking module based on dph reward for each NFT
 - UpgradableNftStaking.move - advanced NFT staking module, that calculate reward based on token "level" property
+
+#### Deployed Modules on Testnet can be found here:
+[3f14e20d73e03c22e25950ac1c12f840c1c1509a24c85f1fae9271a949f00c99](https://explorer.aptoslabs.com/account/3f14e20d73e03c22e25950ac1c12f840c1c1509a24c85f1fae9271a949f00c99?network=testnet)
+
 
 
 # MintNFTS
