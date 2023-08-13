@@ -508,7 +508,7 @@ module owner_addr::mint_stake_upgrade_tokens_v2 {
   }
 
   public entry fun claim_reward<CoinType>(
-    staker: &signer, staking_creator_addr: address, token_address: address, collection_owner_addr: address, collection_name: String, token_name: String,
+    staker: &signer, staking_creator_addr: address, token_address: address, collection_name: String, token_name: String,
   ) acquires ResourceReward, ResourceStaking, ResourceInfo, EventsStore {
     let staker_addr = signer::address_of(staker);
 

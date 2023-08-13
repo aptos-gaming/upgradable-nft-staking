@@ -49,7 +49,7 @@ const rewardCoinType = `${moduleAddress}::mint_coins::Minerals`; // might be apt
 const collectionName = "Test Collection";
 const tokenName = "Token 1";
 const propertyVersion = "0";
-const packageName = "mint_and_manage_tokens"
+const packageName = "mint_upgrade_tokens_v1"
 
 const payload = {
     type: "entry_function_payload",
@@ -476,10 +476,10 @@ ClaimEvent {
 Usage (example with claim events, but you can change `claim_event` to `unstake_events` or `stake_events`)
 
 ```js
-const stakingEventStore = `${moduleAddress}::upgradable_token_v1_staking::StakingEventStore`
+const eventStore = `${moduleAddress}::upgradable_token_v1_staking::EventsStore`
 
 try {
-    const claimEvents = await client.getEventsByEventHandle(account.address, stakingEventStore, "claim_events")
+    const claimEvents = await client.getEventsByEventHandle(account.address, eventStore, "claim_events")
     console.log(claimEvents)
 } catch (e) {
     console.log(e)

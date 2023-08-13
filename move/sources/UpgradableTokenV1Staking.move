@@ -49,7 +49,7 @@ module owner_addr::upgradable_token_v1_staking {
   }
 
   // will be stored on account who move his token into staking
-  struct StakingEventStore has key {
+  struct EventsStore has key {
     stake_events: EventHandle<StakeEvent>,
     unstake_events: EventHandle<UnstakeEvent>,
     claim_events: EventHandle<ClaimEvent>,
@@ -96,8 +96,8 @@ module owner_addr::upgradable_token_v1_staking {
   // helper functions
   // init event store on staked_addr if he doesnt have such resource
   fun initialize_staking_event_store(account: &signer) {
-    if (!exists<StakingEventStore>(signer::address_of(account))) {
-      move_to<StakingEventStore>(account, StakingEventStore {
+    if (!exists<EventsStore>(signer::address_of(account))) {
+      move_to<EventsStore>(account, EventsStore {
         stake_events: account::new_event_handle<StakeEvent>(account),
         unstake_events: account::new_event_handle<UnstakeEvent>(account),
         claim_events: account::new_event_handle<ClaimEvent>(account),
@@ -222,7 +222,7 @@ module owner_addr::upgradable_token_v1_staking {
   // move token from sender to resource account and start staking
   public entry fun stake_token(
     staker: &signer, staking_creator_addr: address, collection_owner_addr: address, collection_name: String, token_name: String, property_version: u64, tokens: u64,
-  ) acquires ResourceReward, ResourceStaking, ResourceInfo, StakingEventStore, StakingStatusInfo {
+  ) acquires ResourceReward, ResourceStaking, ResourceInfo, EventsStore, StakingStatusInfo {
     let staker_addr = signer::address_of(staker);
 
     let token_id = token::create_token_id_raw(collection_owner_addr, collection_name, token_name, property_version);
@@ -251,7 +251,7 @@ module owner_addr::upgradable_token_v1_staking {
 
     initialize_staking_event_store(staker);
 
-    let staking_event_store = borrow_global_mut<StakingEventStore>(staker_addr);
+    let staking_event_store = borrow_global_mut<EventsStore>(staker_addr);
 
     // token still on owner address and will be transfered to resource account later
     let token_level = get_token_level(staker_addr, token_id);
@@ -345,7 +345,7 @@ module owner_addr::upgradable_token_v1_staking {
 
   public entry fun claim_reward<CoinType>(
     staker: &signer, staking_creator_addr: address, collection_owner_addr: address, collection_name: String, token_name: String, property_version: u64,
-  ) acquires ResourceReward, ResourceStaking, ResourceInfo, StakingEventStore {
+  ) acquires ResourceReward, ResourceStaking, ResourceInfo, EventsStore {
     let staker_addr = signer::address_of(staker);
 
     let staking_address = get_resource_address(staking_creator_addr, collection_name);
@@ -387,9 +387,9 @@ module owner_addr::upgradable_token_v1_staking {
       managed_coin::register<CoinType>(staker);
     };
 
-    assert!(exists<StakingEventStore>(staker_addr), ENO_STAKING_EVENT_STORE);
+    assert!(exists<EventsStore>(staker_addr), ENO_STAKING_EVENT_STORE);
 
-    let staking_event_store = borrow_global_mut<StakingEventStore>(staker_addr);
+    let staking_event_store = borrow_global_mut<EventsStore>(staker_addr);
 
     // token are on reward_treasury_addr now, not on staker_addr
     let token_level = get_token_level(reward_treasury_addr, token_id);
@@ -415,7 +415,7 @@ module owner_addr::upgradable_token_v1_staking {
 
   public entry fun unstake_token<CoinType>(
     staker: &signer, staking_creator_addr: address, collection_owner_addr: address, collection_name: String, token_name: String, property_version: u64,
-  ) acquires ResourceReward, ResourceStaking, ResourceInfo, StakingEventStore, StakingStatusInfo {
+  ) acquires ResourceReward, ResourceStaking, ResourceInfo, EventsStore, StakingStatusInfo {
     let staker_addr = signer::address_of(staker);
 
     // check if staker start staking or not
@@ -465,9 +465,9 @@ module owner_addr::upgradable_token_v1_staking {
     };
 
     // trigger unstake event
-    assert!(exists<StakingEventStore>(staker_addr), ENO_STAKING_EVENT_STORE);
+    assert!(exists<EventsStore>(staker_addr), ENO_STAKING_EVENT_STORE);
 
-    let staking_event_store = borrow_global_mut<StakingEventStore>(staker_addr);
+    let staking_event_store = borrow_global_mut<EventsStore>(staker_addr);
 
     // token on reward treasury address now
     let token_level = get_token_level(reward_treasury_addr, token_id);

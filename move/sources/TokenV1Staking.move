@@ -43,7 +43,7 @@ module owner_addr::token_v1_staking {
   }
 
   // will be stored on account who move his nft into staking
-  struct StakingEventStore has key {
+  struct EventsStore has key {
     stake_events: EventHandle<StakeEvent>,
     unstake_events: EventHandle<UnstakeEvent>,
     claim_events: EventHandle<ClaimEvent>,
@@ -114,8 +114,8 @@ module owner_addr::token_v1_staking {
   }
 
   fun initialize_staking_event_store(account: &signer) {
-    if (!exists<StakingEventStore>(signer::address_of(account))) {
-      move_to<StakingEventStore>(account, StakingEventStore {
+    if (!exists<EventsStore>(signer::address_of(account))) {
+      move_to<EventsStore>(account, EventsStore {
         stake_events: account::new_event_handle<StakeEvent>(account),
         unstake_events: account::new_event_handle<UnstakeEvent>(account),
         claim_events: account::new_event_handle<ClaimEvent>(account),
@@ -203,7 +203,7 @@ module owner_addr::token_v1_staking {
   // move nft from sender (staker) to resource account and start staking
   public entry fun stake_token(
     staker: &signer, staking_creator_addr: address, collection_owner_addr: address, collection_name: String, token_name: String, property_version: u64, tokens: u64,
-  ) acquires ResourceReward, ResourceStaking, ResourceInfo, StakingEventStore, StakingStatusInfo {
+  ) acquires ResourceReward, ResourceStaking, ResourceInfo, EventsStore, StakingStatusInfo {
     let staker_addr = signer::address_of(staker);
     
     let token_id = token::create_token_id_raw(collection_owner_addr, collection_name, token_name, property_version);
@@ -231,7 +231,7 @@ module owner_addr::token_v1_staking {
 
     initialize_staking_event_store(staker);
 
-    let staking_event_store = borrow_global_mut<StakingEventStore>(staker_addr);
+    let staking_event_store = borrow_global_mut<EventsStore>(staker_addr);
 
     event::emit_event<StakeEvent>(
       &mut staking_event_store.stake_events,
@@ -320,7 +320,7 @@ module owner_addr::token_v1_staking {
   // same as unstake but without final sending of token and updating staking data
   public entry fun claim_reward<CoinType>(
     staker: &signer, staking_creator_addr: address, collection_owner_addr: address, collection_name: String, token_name: String, property_version: u64,
-  ) acquires ResourceReward, ResourceStaking, ResourceInfo, StakingEventStore {
+  ) acquires ResourceReward, ResourceStaking, ResourceInfo, EventsStore {
     let staker_addr = signer::address_of(staker);
 
     let staking_address = get_resource_address(staking_creator_addr, collection_name);
@@ -363,7 +363,7 @@ module owner_addr::token_v1_staking {
       managed_coin::register<CoinType>(staker);
     };
 
-    let staking_event_store = borrow_global_mut<StakingEventStore>(staker_addr);
+    let staking_event_store = borrow_global_mut<EventsStore>(staker_addr);
 
     // trigger claim event
     event::emit_event<ClaimEvent>(
@@ -386,7 +386,7 @@ module owner_addr::token_v1_staking {
   // send token from resource account back to staker and claim all pending reward
   public entry fun unstake_token<CoinType>(
     staker: &signer, staking_creator_addr: address, collection_owner_addr: address, collection_name: String, token_name: String, property_version: u64,
-  ) acquires ResourceReward, ResourceStaking, ResourceInfo, StakingStatusInfo, StakingEventStore {
+  ) acquires ResourceReward, ResourceStaking, ResourceInfo, StakingStatusInfo, EventsStore {
     let staker_addr = signer::address_of(staker);
 
     let staking_address = get_resource_address(staking_creator_addr, collection_name);
@@ -435,7 +435,7 @@ module owner_addr::token_v1_staking {
       };
     };
     
-    let staking_event_store = borrow_global_mut<StakingEventStore>(staker_addr);
+    let staking_event_store = borrow_global_mut<EventsStore>(staker_addr);
 
     // trigger unstake event
     event::emit_event<UnstakeEvent>(

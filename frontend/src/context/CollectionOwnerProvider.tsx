@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 
-
 export interface ICollectionOwnerContext {
   collectionOwnerAddress: string | null;
   setCollectionOwnerAddress: (newOnwer: string | null) => void;

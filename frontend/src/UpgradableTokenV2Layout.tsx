@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from 'react'
-import { Button, Row, Col, Modal } from 'antd';
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import React, { useEffect, useState } from 'react';
+import { Col, Button, Modal } from "antd";
 import { Network, Provider, AptosClient } from "aptos";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useApolloClient } from '@apollo/client';
 
-import { AccountTokensV1WithDataQuery } from './components/TokensList'
+import { AccountTokensV2WithDataQuery } from './components/TokensList'
+import EventsTable from './components/EventsTable';
+import CONFIG from "./config.json"
 import useSelectedToken from './context/useSelectedToken'
 import useCollectionOwner from './context/useCollectionOwner'
-import EventsTable from './components/EventsTable'
-import CONFIG from "./config.json"
 
-const PackageName = "upgradable_token_v1_staking";
+const PackageName = "mint_stake_upgrade_tokens_v2"
 
 const DevnetClientUrl = "https://fullnode.devnet.aptoslabs.com/v1"
 const TestnetClientUrl = "https://fullnode.testnet.aptoslabs.com"
@@ -20,89 +20,66 @@ const provider = new Provider(CONFIG.network === "devnet" ?  Network.DEVNET : Ne
 
 const RewardCoinType = `${CONFIG.moduleAddress}::mint_coins::${CONFIG.coinName}`
 
-const Decimals = 8 // coin has 8 decimals (check MintCoins.move)
+const Decimals = 8
 
-interface ClaimEvent {
-  coin_amount: string,
-  timestamp: string,
-  token_level: string,
-  token_id: {
-    property_version: string,
-    token_data_id: {
-      collection: string,
-      creator: string,
-      name: string,
-    }
-  }
-}
-
-const UpgradableTokenV1Layout = () => {
+const UpgradableTokenV2Layout = () => {
   const [unclaimedReward, setUnclaimedReward] = useState(0)
-  const [claimEvents, setClaimEvents] = useState<ClaimEvent[]>([])
+  const [claimEvents, setClaimEvents] = useState<any[]>([])
   const { selectedToken, setSelectedToken } = useSelectedToken()
-  const { collectionOwnerAddress, setCollectionOwnerAddress } = useCollectionOwner()
+  const { setCollectionOwnerAddress } = useCollectionOwner()
   const apolloClient = useApolloClient()
 
-  const { account, signAndSubmitTransaction } = useWallet()
-  
-  const getCollectionOwnerAddress = async () => {
-    const packageName = "mint_upgrade_tokens_v1"
-    const payload = {
-      function: `${CONFIG.moduleAddress}::${packageName}::get_resource_address`,
-      type_arguments: [],
-      // creator, collection_name
-      arguments: [CONFIG.moduleAddress, CONFIG.collectionName]
-    }
+  const [ownerAddress, setOwnerAddress] = useState('')
 
-    try {
-      const viewResponse = await provider.view(payload)       
-      setCollectionOwnerAddress(String(viewResponse[0]))
-    } catch(e) {
-      console.log("Error during getting resource account addres")
-      console.log(e)
-    }
-  }
+  const { account, signAndSubmitTransaction } = useWallet();
 
-  const onLevelUpgrade = async () => {
-    const packageName = "mint_upgrade_tokens_v1"
-
-    const payload = {
-      type: "entry_function_payload",
-      function: `${CONFIG.moduleAddress}::${packageName}::upgrade_token`,
-      type_arguments: [RewardCoinType],
-      // creator_addr, collection_name, token_name, property_version
-      arguments: [collectionOwnerAddress, selectedToken?.collection_name, selectedToken?.name, selectedToken?.property_version ],
+  useEffect(() => {
+    async function init() {
+      if (account?.address) {
+        getClaimEvents()
+        getCollectionOwnerAddress()
+      }
     }
-    try {
-      const tx = await signAndSubmitTransaction(payload)
-      await client.waitForTransactionWithResult(tx.hash)
-      setSelectedToken(null)
-      setUnclaimedReward(0)
-      await apolloClient.refetchQueries({ include: [AccountTokensV1WithDataQuery]})
-    } catch (e) {
-      console.log("ERROR during token upgrade")
-    }
-  }
+    init()
+    
+  }, [account?.address])
 
   const createCollectionWithTokenUpgrade = async () => {
-    const packageName = "mint_upgrade_tokens_v1"
-
     const payload = {
       type: "entry_function_payload",
-      function: `${CONFIG.moduleAddress}::${packageName}::create_collection_and_enable_token_upgrade`,
+      function: `${CONFIG.moduleAddress}::${PackageName}::create_collection_and_enable_token_upgrade`,
       type_arguments: [RewardCoinType],    
       arguments: [],
     }
     try {
       const tx = await signAndSubmitTransaction(payload)
       await client.waitForTransactionWithResult(tx.hash)
-      await apolloClient.refetchQueries({ include: [AccountTokensV1WithDataQuery]})
+      await apolloClient.refetchQueries({ include: [AccountTokensV2WithDataQuery]})
     } catch (e) {
       console.log("ERROR during create_collection_and_enable_token_upgrade")
       console.log(e)
     }
   }
 
+  const getCollectionOwnerAddress = async () => {
+    const payload = {
+      function: `${CONFIG.moduleAddress}::${PackageName}::get_staking_resource_address_by_collection_name`,
+      type_arguments: [],
+      // creator, collection_name
+      arguments: [CONFIG.moduleAddress, CONFIG.collectionName]
+    }
+
+    try {
+      const viewResponse = await provider.view(payload)
+      setCollectionOwnerAddress(String(viewResponse[0]))
+      setOwnerAddress(String(viewResponse[0]))
+    } catch(e) {
+      console.log("Error during getting resource account addres")
+      console.log(e)
+    }
+  }
+
+  
   const createStaking = async () => {
     const tokensPerHour = 36
     const amountToTreasury = 50000
@@ -111,11 +88,11 @@ const UpgradableTokenV1Layout = () => {
       type: "entry_function_payload",
       function: `${CONFIG.moduleAddress}::${PackageName}::create_staking`,
       type_arguments: [RewardCoinType],
-      // collection_owner_address, dph, collection_name, total_amount
-      arguments: [collectionOwnerAddress, tokensPerHour * (10 ** Decimals), CONFIG.collectionName, amountToTreasury * 10 ** Decimals],
+      // dph, collection_name, total_amount
+      arguments: [tokensPerHour * (10 ** Decimals), CONFIG.collectionName, amountToTreasury * 10 ** Decimals],
     }
     try {
-      const tx = await signAndSubmitTransaction(payload);
+      const tx = await signAndSubmitTransaction(payload)
       await client.waitForTransactionWithResult(tx.hash)
     } catch (e) {
       console.log("ERROR during create staking tx")
@@ -128,15 +105,15 @@ const UpgradableTokenV1Layout = () => {
       type: "entry_function_payload",
       function: `${CONFIG.moduleAddress}::${PackageName}::stake_token`,
       type_arguments: [],
-      // staking_creator_addr, collection_owner_addr, collection_name, token_name, property_version, tokens
-      arguments: [CONFIG.moduleAddress, collectionOwnerAddress, selectedToken?.collection_name, selectedToken?.name, String(selectedToken?.property_version), "1"]
+      // staking_creator_addr, collection_owner_addr, token_address, collection_name, token_name, tokens
+      arguments: [CONFIG.moduleAddress, ownerAddress, selectedToken?.storage_id, CONFIG.collectionName, selectedToken?.current_token_data.token_name, "1"]
     }
     try {
       const tx = await signAndSubmitTransaction(payload)
       setSelectedToken(null)
       setUnclaimedReward(0)
       await client.waitForTransactionWithResult(tx.hash)
-      await apolloClient.refetchQueries({ include: [AccountTokensV1WithDataQuery]})
+      await apolloClient.refetchQueries({ include: [AccountTokensV2WithDataQuery]})
     } catch (e) {
       console.log("Error druing stake token tx")
       console.log(e)
@@ -148,15 +125,15 @@ const UpgradableTokenV1Layout = () => {
       type: "entry_function_payload",
       function: `${CONFIG.moduleAddress}::${PackageName}::unstake_token`,
       type_arguments: [RewardCoinType],
-      // staking_creator_addr, collection_owner_addr, collection_name, token_name, property_version
-      arguments: [CONFIG.moduleAddress, collectionOwnerAddress, selectedToken?.collection_name, selectedToken?.name, String(selectedToken?.property_version)]
+      // staking_creator_addr, collection_owner_addr, token_address, collection_name, token_name,
+      arguments: [CONFIG.moduleAddress, ownerAddress, selectedToken?.storage_id, CONFIG.collectionName, selectedToken?.current_token_data.token_name]
     }
     try {
       const tx = await signAndSubmitTransaction(payload)
       setSelectedToken(null)
       setUnclaimedReward(0)
       await client.waitForTransactionWithResult(tx.hash)
-      await apolloClient.refetchQueries({ include: [AccountTokensV1WithDataQuery]})
+      await apolloClient.refetchQueries({ include: [AccountTokensV2WithDataQuery]})
     } catch (e) {
       console.log("Error druing unstake token tx")
       console.log(e)
@@ -168,7 +145,8 @@ const UpgradableTokenV1Layout = () => {
       type: "entry_function_payload",
       function: `${CONFIG.moduleAddress}::${PackageName}::claim_reward`,
       type_arguments: [RewardCoinType],
-      arguments: [CONFIG.moduleAddress, collectionOwnerAddress, selectedToken?.collection_name, selectedToken?.name, selectedToken?.property_version],
+      // staking_creator_addr, token_address, collection_name, token_name
+      arguments: [CONFIG.moduleAddress, selectedToken?.storage_id, CONFIG.collectionName, selectedToken?.current_token_data.token_name],
     }
     try {
       const tx = await signAndSubmitTransaction(payload)
@@ -189,7 +167,7 @@ const UpgradableTokenV1Layout = () => {
       const claimEvents = await client.getEventsByEventHandle(account?.address || '', eventStore, "claim_events")
       const formmatedClaimEvents = claimEvents.map((claimEvent) => ({
         ...claimEvent.data,
-        token_name: claimEvent.data.token_id.token_data_id.name,
+        token_name: claimEvent.data.token_name,
       }))
       setClaimEvents(formmatedClaimEvents)
     } catch (e: any) {
@@ -204,8 +182,8 @@ const UpgradableTokenV1Layout = () => {
     const payload = {
       function: `${CONFIG.moduleAddress}::${PackageName}::get_unclaimed_reward`,
       type_arguments: [],
-      // staker_addr, staking_creator_addr, collection_owner_addr, collection_name, token_name, property_version
-      arguments: [account?.address, CONFIG.moduleAddress, collectionOwnerAddress, token?.collection_name, token?.name, String(token?.property_version)]
+      // staker_addr, staking_creator_addr, token_address, collection_name, token_name
+      arguments: [account?.address, CONFIG.moduleAddress, selectedToken?.storage_id, CONFIG.collectionName, selectedToken?.current_token_data.token_name]
     }
 
     try {
@@ -218,48 +196,54 @@ const UpgradableTokenV1Layout = () => {
   }
 
   useEffect(() => {
-    if (selectedToken && selectedToken.packageName === "upgradable_token_v1_staking") {
+    if (selectedToken) {
       getUnclaimedReward(selectedToken)
     }
   }, [selectedToken])
 
-  useEffect(() => {
-    async function init() {
-      if (account?.address) {
-        getClaimEvents()
-        // will return value only after createCollectionWithTokenUpgrade call
-        getCollectionOwnerAddress()
-      }
+  const onLevelUpgrade = async () => {
+    const payload = {
+      type: "entry_function_payload",
+      function: `${CONFIG.moduleAddress}::${PackageName}::upgrade_token`,
+      type_arguments: [RewardCoinType],
+      // collection_owner, token address
+      arguments: [ownerAddress, selectedToken?.storage_id],
     }
-    init()
-    
-  }, [account?.address])
+    try {
+      const tx = await signAndSubmitTransaction(payload)
+      await client.waitForTransactionWithResult(tx.hash)
+      setSelectedToken(null)
+      setUnclaimedReward(0)
+      await apolloClient.refetchQueries({ include: [AccountTokensV2WithDataQuery]})
+    } catch (e) {
+      console.log("ERROR during token upgrade")
+    }
+  }
 
   return (
-    <>
+    <>  
       <Col>
         <h3 className='admin-section'>Admin section</h3>
-        <Row>
-          <Button
-            disabled={!account?.address}
-            onClick={createStaking}
-            type="primary"
-          >
-            Init {CONFIG.coinName} Staking
-          </Button>
-          <Button
-            disabled={!account?.address}
-            onClick={createCollectionWithTokenUpgrade}
-            type="primary"
-            style={{ marginLeft: '1rem' }}
-          >
-            Create Collection With Token Upgrade
-          </Button>
-        </Row>
+        <Button
+          disabled={!account?.address}
+          onClick={createCollectionWithTokenUpgrade}
+          type="primary"
+          style={{ marginLeft: '1rem' }}
+        >
+          Create Collection With Token Upgrade
+        </Button>
+        <Button
+          disabled={!account?.address}
+          onClick={createStaking}
+          type="primary"
+          style={{ marginLeft: '1rem' }}
+        >
+          Init Staking
+        </Button>
         <EventsTable data={claimEvents} title="Upgradable Token Staking" />
         <Modal
           title="Upgradable Staking Actions"
-          open={!!selectedToken && selectedToken.packageName === "upgradable_token_v1_staking"}
+          open={!!selectedToken}
           footer={null}
           onCancel={() => {
             setSelectedToken(null)
@@ -299,13 +283,13 @@ const UpgradableTokenV1Layout = () => {
               Upgrade
             </Button>
           </div>
-          <p style={{ marginTop: '3rem' }}>
-            Unclaimed reward: <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>{unclaimedReward}</span> {CONFIG.coinName}
+          <p className="unclaimed-reward-text">
+            Unclaimed reward: <span style={{ color: 'black', fontWeight: 'bold', fontSize: '1.2rem' }}>{unclaimedReward}</span> {CONFIG.coinName}
           </p>
         </Modal>
       </Col>
     </>
-  )
+  );
 }
 
-export default UpgradableTokenV1Layout
+export default UpgradableTokenV2Layout;

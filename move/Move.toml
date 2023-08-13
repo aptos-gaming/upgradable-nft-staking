@@ -1,5 +1,5 @@
 [package]
-name = 'token_v1_staking'
+name = 'token_staking'
 version = '1.0.0'
 
 [dependencies.AptosFramework]
@@ -11,3 +11,8 @@ subdir = 'aptos-move/framework/aptos-framework'
 git = 'https://github.com/aptos-labs/aptos-core.git'
 rev = 'main'
 subdir = 'aptos-move/framework/aptos-token'
+
+[dependencies.AptosTokenObjects]
+git = 'https://github.com/aptos-labs/aptos-core.git'
+rev = 'main'
+subdir = 'aptos-move/framework/aptos-token-objects'

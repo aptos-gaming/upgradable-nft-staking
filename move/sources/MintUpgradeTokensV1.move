@@ -1,4 +1,4 @@
-module owner_addr::mint_and_manage_tokens {
+module owner_addr::mint_upgrade_tokens_v1 {
   use aptos_std::signer;
   use aptos_std::string::{ Self, String };
   use aptos_std::string_utils;
@@ -34,25 +34,25 @@ module owner_addr::mint_and_manage_tokens {
     coin_type: address,
   }
 
-  struct UpdateTokenInfo has key {
+  struct CollectionOwnerInfo has key {
     map: SimpleMap<String, address>,
   }
 
-  fun create_and_add_update_token_info(account: &signer, collection_name: String, resource_signer_address: address) acquires UpdateTokenInfo {
+  fun create_and_add_update_token_info(account: &signer, collection_name: String, resource_signer_address: address) acquires CollectionOwnerInfo {
     let account_addr = signer::address_of(account);
-    if (!exists<UpdateTokenInfo>(account_addr)) {
-      move_to(account, UpdateTokenInfo {
+    if (!exists<CollectionOwnerInfo>(account_addr)) {
+      move_to(account, CollectionOwnerInfo {
         map: simple_map::create()
       })
     };
-    let maps = borrow_global_mut<UpdateTokenInfo>(account_addr);
+    let maps = borrow_global_mut<CollectionOwnerInfo>(account_addr);
     simple_map::add(&mut maps.map, collection_name, resource_signer_address);
   }
 
   #[view]
-  fun get_resource_address(creator: address, collection_name: String): address acquires UpdateTokenInfo {
-    assert!(exists<UpdateTokenInfo>(creator), ENO_UPGRADE);
-    let simple_maps = borrow_global<UpdateTokenInfo>(creator);
+  fun get_resource_address(creator: address, collection_name: String): address acquires CollectionOwnerInfo {
+    assert!(exists<CollectionOwnerInfo>(creator), ENO_UPGRADE);
+    let simple_maps = borrow_global<CollectionOwnerInfo>(creator);
 
     let resource_address = *simple_map::borrow(&simple_maps.map, &collection_name);
     resource_address
@@ -64,7 +64,7 @@ module owner_addr::mint_and_manage_tokens {
     type_info::account_address(&type_info)
   }
 
-  public entry fun create_collection_and_enable_token_upgrade<CoinType>(owner: &signer) acquires UpdateTokenInfo {
+  public entry fun create_collection_and_enable_token_upgrade<CoinType>(owner: &signer) acquires CollectionOwnerInfo {
     let collection_name = string::utf8(b"Galactic Collection");
     let description = string::utf8(b"Galactic NFT collection");
     let uri = string::utf8(b"https://aptos.dev/");

@@ -1,8 +1,6 @@
 import React, { useState } from 'react'
 
-import { TokenData } from '../components/NftList'
-
-type TokenDataWithPackage = TokenData & {
+type TokenDataWithPackage = any & {
   packageName?: 'upgradable_token_v1_staking' | 'token_v1_staking'
 }
 

@@ -4,7 +4,7 @@ import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { AptosClient, Provider, Network } from "aptos";
 import { useApolloClient } from '@apollo/client';
 
-import { AccountTokensWithDataQuery } from './components/NftList'
+import { AccountTokensV1WithDataQuery } from './components/TokensList'
 import EventsTable from './components/EventsTable';
 import useSelectedToken from './context/useSelectedToken'
 import useCollectionOwner from './context/useCollectionOwner'
@@ -17,7 +17,6 @@ const TestnetClientUrl = "https://fullnode.testnet.aptoslabs.com"
 
 const client = new AptosClient(CONFIG.network === "devnet" ? DevnetClientUrl : TestnetClientUrl)
 const provider = new Provider(CONFIG.network === "devnet" ?  Network.DEVNET : Network.TESTNET);
-
 
 const RewardCoinType = `${CONFIG.moduleAddress}::mint_coins::${CONFIG.coinName}`
 
@@ -45,7 +44,7 @@ const TokenV1Layout = () => {
   const { collectionOwnerAddress, setCollectionOwnerAddress } = useCollectionOwner()
 
   const getCollectionOwnerAddress = async () => {
-    const packageName = "mint_and_manage_tokens"
+    const packageName = "mint_upgrade_tokens_v1"
     const payload = {
       function: `${CONFIG.moduleAddress}::${packageName}::get_resource_address`,
       type_arguments: [],
@@ -95,7 +94,7 @@ const TokenV1Layout = () => {
       await client.waitForTransactionWithResult(tx.hash)
       setSelectedToken(null)
       setUnclaimedReward(0)
-      await apolloClient.refetchQueries({ include: [AccountTokensWithDataQuery]})
+      await apolloClient.refetchQueries({ include: [AccountTokensV1WithDataQuery]})
     } catch (e) {
       console.log("Error druing stake token tx")
       console.log(e)
@@ -115,7 +114,7 @@ const TokenV1Layout = () => {
       await client.waitForTransactionWithResult(tx.hash)
       setSelectedToken(null)
       setUnclaimedReward(0)
-      await apolloClient.refetchQueries({ include: [AccountTokensWithDataQuery]})
+      await apolloClient.refetchQueries({ include: [AccountTokensV1WithDataQuery]})
     } catch (e) {
       console.log("Error druing unstake token tx")
       console.log(e)
@@ -143,10 +142,10 @@ const TokenV1Layout = () => {
   }
 
   const getClaimEvents = async () => {
-    const stakingEventStore = `${CONFIG.moduleAddress}::${PackageName}::StakingEventStore`
+    const eventStore = `${CONFIG.moduleAddress}::${PackageName}::EventsStore`
 
     try {
-      const claimEvents = await client.getEventsByEventHandle(account?.address || '', stakingEventStore, "claim_events")
+      const claimEvents = await client.getEventsByEventHandle(account?.address || '', eventStore, "claim_events")
       const formmatedClaimEvents = claimEvents.map((claimEvent) => ({
         ...claimEvent.data,
         token_name: claimEvent.data.token_id.token_data_id.name,

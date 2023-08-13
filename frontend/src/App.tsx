@@ -18,7 +18,7 @@ import UpgradableTokenV1Layout from './UpgradableTokenV1Layout'
 import CoinBalance from './components/CoinBalance'
 import { SelectedTokenProvider } from './context/SelectedTokenProvider'
 import { CollectionOwnerProvider } from './context/CollectionOwnerProvider'
-import { NftList } from './components/NftList'
+import { TokensList } from './components/TokensList'
 import CONFIG from './config.json'
 
 const APTOS_GRAPH = `https://indexer-${CONFIG.network}.staging.gcp.aptosdev.com/v1/graphql`
@@ -37,7 +37,7 @@ const items: TabsProps['items'] = [{
   label: 'Basic Token Staking',
   children: (
     <>
-      <NftList packageName="token_v1_staking" />
+      <TokensList packageName="token_v1_staking" />
       <TokenV1Layout />
     </>
   ),
@@ -46,7 +46,7 @@ const items: TabsProps['items'] = [{
   label: 'Upgradable Token Staking',
   children: (
     <>
-      <NftList packageName="upgradable_token_v1_staking" />
+      <TokensList packageName="upgradable_token_v1_staking" />
       <UpgradableTokenV1Layout />
     </>
   ),
