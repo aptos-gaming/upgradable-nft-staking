@@ -24,7 +24,7 @@ Modules
 - UpgradableNftStaking.move - advanced NFT staking module, that calculate reward based on token "level" property
 
 #### Deployed Modules on Testnet can be found here:
-[3f14e20d73e03c22e25950ac1c12f840c1c1509a24c85f1fae9271a949f00c99](https://explorer.aptoslabs.com/account/3f14e20d73e03c22e25950ac1c12f840c1c1509a24c85f1fae9271a949f00c99?network=testnet)
+[0f663e428a90eb3f7a485383a54511720e69a92d52e12d2d06fcc2af0bb3897e](https://explorer.aptoslabs.com/account/0f663e428a90eb3f7a485383a54511720e69a92d52e12d2d06fcc2af0bb3897e?network=testnet)
 
 
 
