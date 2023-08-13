@@ -1,4 +1,4 @@
-module owner_addr::upgradable_nft_staking {
+module owner_addr::upgradable_token_v1_staking {
   use std::string::{ Self, String };
   use std::bcs::to_bytes;
   use std::signer;
@@ -15,7 +15,6 @@ module owner_addr::upgradable_nft_staking {
 
   use aptos_std::type_info;
   use aptos_std::vector;
-
 
   const ESTAKER_MISMATCH: u64 = 1;
   const ECOIN_TYPE_MISMATCH: u64 = 2;
@@ -49,7 +48,7 @@ module owner_addr::upgradable_nft_staking {
     timestamp: u64,
   }
 
-  // will be stored on account who move his nft into staking
+  // will be stored on account who move his token into staking
   struct StakingEventStore has key {
     stake_events: EventHandle<StakeEvent>,
     unstake_events: EventHandle<UnstakeEvent>,
@@ -162,8 +161,8 @@ module owner_addr::upgradable_nft_staking {
     // rps - reward per second
     let rps = rph / 3600;
 
-    // get current level of token(nft)
-    let level = get_nft_lvl(owner_addr, token_id);
+    // get current level of token
+    let level = get_token_level(owner_addr, token_id);
 
     let reward = ((now - staking_start_time) * (rps * level) * number_of_tokens);
   
@@ -172,7 +171,7 @@ module owner_addr::upgradable_nft_staking {
   }
 
   // return token level
-  fun get_nft_lvl(owner_addr: address, token_id: TokenId): u64 {
+  fun get_token_level(owner_addr: address, token_id: TokenId): u64 {
     let pm = token::get_property_map(owner_addr, token_id);
 
     let level = property_map::read_u64(&pm, &string::utf8(b"level"));
@@ -190,10 +189,10 @@ module owner_addr::upgradable_nft_staking {
   // create new resource_account with staking_treasury and ResourceStaking resource
   // and also send some initial Coins to staking_treasury account
   public entry fun create_staking<CoinType>(
-    staking_creator: &signer, collection_creator_addr: address, rph: u64, collection_name: String, total_amount: u64,
+    staking_creator: &signer, collection_owner_addr: address, rph: u64, collection_name: String, total_amount: u64,
   ) acquires ResourceInfo {
     // check that creator has the collection
-    assert!(token::check_collection_exists(collection_creator_addr, collection_name), ENO_COLLECTION);
+    assert!(token::check_collection_exists(collection_owner_addr, collection_name), ENO_COLLECTION);
 
     // create new staking resource account
     let (staking_treasury, staking_treasury_cap) = account::create_resource_account(staking_creator, to_bytes(&collection_name));
@@ -222,15 +221,15 @@ module owner_addr::upgradable_nft_staking {
 
   // move token from sender to resource account and start staking
   public entry fun stake_token(
-    staker: &signer, staking_creator_addr: address, collection_creator_addr: address, collection_name: String, token_name: String, property_version: u64, tokens: u64,
+    staker: &signer, staking_creator_addr: address, collection_owner_addr: address, collection_name: String, token_name: String, property_version: u64, tokens: u64,
   ) acquires ResourceReward, ResourceStaking, ResourceInfo, StakingEventStore, StakingStatusInfo {
     let staker_addr = signer::address_of(staker);
 
-    let token_id = token::create_token_id_raw(collection_creator_addr, collection_name, token_name, property_version);
+    let token_id = token::create_token_id_raw(collection_owner_addr, collection_name, token_name, property_version);
     // check that signer has token on balance
     assert!(token::balance_of(staker_addr, token_id) >= tokens, ENO_TOKEN_IN_TOKEN_STORE);
     // check that creator has collection
-    assert!(token::check_collection_exists(collection_creator_addr, collection_name), ENO_COLLECTION);
+    assert!(token::check_collection_exists(collection_owner_addr, collection_name), ENO_COLLECTION);
 
     // check if staker start staking or not
     // staking can create anyone (not only creator of collection)
@@ -255,7 +254,7 @@ module owner_addr::upgradable_nft_staking {
     let staking_event_store = borrow_global_mut<StakingEventStore>(staker_addr);
 
     // token still on owner address and will be transfered to resource account later
-    let token_level = get_nft_lvl(staker_addr, token_id);
+    let token_level = get_token_level(staker_addr, token_id);
 
     event::emit_event<StakeEvent>(
       &mut staking_event_store.stake_events,
@@ -286,10 +285,10 @@ module owner_addr::upgradable_nft_staking {
       reward_data.start_time = now;
       reward_data.withdraw_amount = 0;
 
-      // send nft to special resource account of signer
+      // send token to special resource account of signer
       token::direct_transfer(staker, &reward_treasury_signer_from_cap, token_id, tokens);
     } else {
-      // first try to stake nft
+      // first try to stake token
       // create some new resource account based on token seed
       let (reward_treasury, reward_treasury_cap) = account::create_resource_account(staker, to_bytes(&token_seed));
       let reward_treasury_signer_from_cap = account::create_signer_with_capability(&reward_treasury_cap);
@@ -319,7 +318,7 @@ module owner_addr::upgradable_nft_staking {
 
   #[view]
   public fun get_unclaimed_reward(
-    staker_addr: address, staking_creator_addr: address, collection_creator_addr: address, collection_name: String, token_name: String, property_version: u64,
+    staker_addr: address, staking_creator_addr: address, collection_owner_addr: address, collection_name: String, token_name: String, property_version: u64,
   ): u64  acquires ResourceInfo, ResourceStaking, ResourceReward {
     // check if staker has resource info
     assert!(exists<ResourceInfo>(staker_addr), ENO_REWARD_RESOURCE);
@@ -338,14 +337,14 @@ module owner_addr::upgradable_nft_staking {
     let staking_data = borrow_global<ResourceStaking>(staking_address);
     let reward_data = borrow_global<ResourceReward>(reward_treasury_addr);    
   
-    let token_id = token::create_token_id_raw(collection_creator_addr, collection_name, token_name, property_version);
+    let token_id = token::create_token_id_raw(collection_owner_addr, collection_name, token_name, property_version);
     
     // cannot use staker_addr, as now token stored in resource account
     calculate_reward(reward_treasury_addr, token_id, staking_data.rph, reward_data.start_time, reward_data.tokens, reward_data.withdraw_amount)
   }
 
   public entry fun claim_reward<CoinType>(
-    staker: &signer, staking_creator_addr: address, collection_creator_addr: address, collection_name: String, token_name: String, property_version: u64,
+    staker: &signer, staking_creator_addr: address, collection_owner_addr: address, collection_name: String, token_name: String, property_version: u64,
   ) acquires ResourceReward, ResourceStaking, ResourceInfo, StakingEventStore {
     let staker_addr = signer::address_of(staker);
 
@@ -371,7 +370,7 @@ module owner_addr::upgradable_nft_staking {
     // check that staker address stored inside MetaReward staker
     assert!(reward_data.staker == staker_addr, ESTAKER_MISMATCH);
 
-    let token_id = token::create_token_id_raw(collection_creator_addr, collection_name, token_name, property_version);
+    let token_id = token::create_token_id_raw(collection_owner_addr, collection_name, token_name, property_version);
 
     let release_amount = calculate_reward(reward_treasury_addr, token_id, staking_data.rph, reward_data.start_time, reward_data.tokens, reward_data.withdraw_amount);
 
@@ -392,8 +391,8 @@ module owner_addr::upgradable_nft_staking {
 
     let staking_event_store = borrow_global_mut<StakingEventStore>(staker_addr);
 
-    // nft/token are on reward_treasury_addr now, not on staker_addr
-    let token_level = get_nft_lvl(reward_treasury_addr, token_id);
+    // token are on reward_treasury_addr now, not on staker_addr
+    let token_level = get_token_level(reward_treasury_addr, token_id);
 
     // trigger claim event
     event::emit_event<ClaimEvent>(
@@ -415,7 +414,7 @@ module owner_addr::upgradable_nft_staking {
   }
 
   public entry fun unstake_token<CoinType>(
-    staker: &signer, staking_creator_addr: address, collection_creator_addr: address, collection_name: String, token_name: String, property_version: u64,
+    staker: &signer, staking_creator_addr: address, collection_owner_addr: address, collection_name: String, token_name: String, property_version: u64,
   ) acquires ResourceReward, ResourceStaking, ResourceInfo, StakingEventStore, StakingStatusInfo {
     let staker_addr = signer::address_of(staker);
 
@@ -433,7 +432,7 @@ module owner_addr::upgradable_nft_staking {
     let additional_seed = token_name;
     string::append(&mut token_seed, additional_seed);
 
-    // get reward treasury address which hold the tokens/nfts
+    // get reward treasury address which hold the tokens
     let reward_treasury_addr = get_resource_address(staker_addr, token_seed);
     assert!(exists<ResourceReward>(reward_treasury_addr), ENO_STAKING_ADDRESS);
 
@@ -444,7 +443,7 @@ module owner_addr::upgradable_nft_staking {
     // check that staker address stored inside MetaReward staker
     assert!(reward_data.staker == staker_addr, ESTAKER_MISMATCH);
 
-    let token_id = token::create_token_id_raw(collection_creator_addr, collection_name, token_name, property_version);
+    let token_id = token::create_token_id_raw(collection_owner_addr, collection_name, token_name, property_version);
 
     let release_amount = calculate_reward(reward_treasury_addr, token_id, staking_data.rph, reward_data.start_time, reward_data.tokens, reward_data.withdraw_amount);
 
@@ -470,8 +469,8 @@ module owner_addr::upgradable_nft_staking {
 
     let staking_event_store = borrow_global_mut<StakingEventStore>(staker_addr);
 
-    // nft on reward treasury address now
-    let token_level = get_nft_lvl(reward_treasury_addr, token_id);
+    // token on reward treasury address now
+    let token_level = get_token_level(reward_treasury_addr, token_id);
 
     // trigger unstake event
     event::emit_event<UnstakeEvent>(
@@ -492,7 +491,7 @@ module owner_addr::upgradable_nft_staking {
     // transfer coins from treasury to staker address
     coin::transfer<CoinType>(&staking_treasury_signer_from_cap, staker_addr, release_amount);
 
-    // move nft from resource account to staker_addr
+    // move token from resource account to staker_addr
     token::direct_transfer(&reward_treasury_signer_from_cap, staker, token_id, reward_data.tokens);
 
     // update how many coins left in module

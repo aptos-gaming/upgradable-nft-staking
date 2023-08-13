@@ -54,7 +54,7 @@ export const AccountTokensWithDataQuery = gql
   }
 `
 interface NftListProps {
-  packageName: 'upgradable_nft_staking' | 'nft_staking'
+  packageName: 'upgradable_token_v1_staking' | 'token_v1_staking'
 }
 
 export const NftList = ({ packageName }: NftListProps) => {

@@ -35,18 +35,18 @@ module owner_addr::mint_and_manage_tokens {
   }
 
   struct UpdateTokenInfo has key {
-    token_map: SimpleMap<String, address>,
+    map: SimpleMap<String, address>,
   }
 
   fun create_and_add_update_token_info(account: &signer, collection_name: String, resource_signer_address: address) acquires UpdateTokenInfo {
     let account_addr = signer::address_of(account);
     if (!exists<UpdateTokenInfo>(account_addr)) {
       move_to(account, UpdateTokenInfo {
-        token_map: simple_map::create()
+        map: simple_map::create()
       })
     };
     let maps = borrow_global_mut<UpdateTokenInfo>(account_addr);
-    simple_map::add(&mut maps.token_map, collection_name, resource_signer_address);
+    simple_map::add(&mut maps.map, collection_name, resource_signer_address);
   }
 
   #[view]
@@ -54,7 +54,7 @@ module owner_addr::mint_and_manage_tokens {
     assert!(exists<UpdateTokenInfo>(creator), ENO_UPGRADE);
     let simple_maps = borrow_global<UpdateTokenInfo>(creator);
 
-    let resource_address = *simple_map::borrow(&simple_maps.token_map, &collection_name);
+    let resource_address = *simple_map::borrow(&simple_maps.map, &collection_name);
     resource_address
   }
 

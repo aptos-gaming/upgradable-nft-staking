@@ -13,8 +13,8 @@ import {
 import { Tabs, TabsProps } from "antd"
 
 import WalletConnect from './components/WalletConnect'
-import BasicNftStakingLayout from './BasicNftStakingLayout';
-import UpgradableNftStakingLayout from './UpgradableNftStakingLayout'
+import TokenV1Layout from './TokenV1Layout';
+import UpgradableTokenV1Layout from './UpgradableTokenV1Layout'
 import CoinBalance from './components/CoinBalance'
 import { SelectedTokenProvider } from './context/SelectedTokenProvider'
 import { CollectionOwnerProvider } from './context/CollectionOwnerProvider'
@@ -37,8 +37,8 @@ const items: TabsProps['items'] = [{
   label: 'Basic Token Staking',
   children: (
     <>
-      <NftList packageName="nft_staking" />
-      <BasicNftStakingLayout />
+      <NftList packageName="token_v1_staking" />
+      <TokenV1Layout />
     </>
   ),
 }, {
@@ -46,8 +46,8 @@ const items: TabsProps['items'] = [{
   label: 'Upgradable Token Staking',
   children: (
     <>
-      <NftList packageName="upgradable_nft_staking" />
-      <UpgradableNftStakingLayout />
+      <NftList packageName="upgradable_token_v1_staking" />
+      <UpgradableTokenV1Layout />
     </>
   ),
 },
@@ -61,7 +61,7 @@ const items: TabsProps['items'] = [{
 }]
 
 const App = () => {
-  const [packageName, setPackageName] = useState<'upgradable_nft_staking' | 'nft_staking'>('nft_staking')
+  const [packageName, setPackageName] = useState<'upgradable_token_v1_staking' | 'token_v1_staking'>('token_v1_staking')
   const wallets = [new PetraWallet(), new MartianWallet(), new PontemWallet()];
   const graphqlClient = getGraphqlClient()
 
@@ -72,7 +72,7 @@ const App = () => {
         <CollectionOwnerProvider>
           <SelectedTokenProvider>
             <CoinBalance />
-            <Tabs type="card" defaultActiveKey="1" items={items} onChange={(tab) => setPackageName(tab === '1' ? 'nft_staking' : 'upgradable_nft_staking')}/>
+            <Tabs type="card" defaultActiveKey="1" items={items} onChange={(tab) => setPackageName(tab === '1' ? 'token_v1_staking' : 'upgradable_token_v1_staking')}/>
           </SelectedTokenProvider>
         </CollectionOwnerProvider>
       </AptosWalletAdapterProvider>

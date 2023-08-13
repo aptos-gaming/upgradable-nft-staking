@@ -75,7 +75,7 @@ try {
 
 Create and enable staking for new collection, set default reward per hour for staking 1 token and transfer initial amount of coins to rewards treasury.
            
-Arguments: `staking_creator: &signer, collection_creator_addr: address, rph: u64, collection_name: String, total_amount: u64`
+Arguments: `staking_creator: &signer, collection_owner_addr: address, rph: u64, collection_name: String, total_amount: u64`
 
 Type Arguments: any `CoinType` which will be used as a reward coin
 
@@ -91,7 +91,7 @@ const decimals = 8;
 
 const payload = {
     type: "entry_function_payload",
-    function: `${moduleAddress}::nft_staking::create_staking`,
+    function: `${moduleAddress}::token_v1_staking::create_staking`,
     type_arguments: [rewardCoinType],
     arguments: [collectionCreatorAddress, tokensPerHour * (10 ** decimals), CollectionName, treasuryCoins * (10 ** decimals)],
 }
@@ -108,7 +108,7 @@ try {
 
 Token will be moved from sender address to resource account and start receiving rewards for staking.
 
-Arguments: `staker: &signer, staking_creator_addr: address, collection_creator_addr: addres, collection_name: String, token_name: String, property_version: u64, tokens: u64`
+Arguments: `staker: &signer, staking_creator_addr: address, collection_owner_addr: addres, collection_name: String, token_name: String, property_version: u64, tokens: u64`
 
 Usage:
 
@@ -122,7 +122,7 @@ const collectionCreatorAddress = "0x2"
 
 const payload = {
     type: "entry_function_payload",
-    function: `${moduleAddress}::nft_staking::stake_token`,
+    function: `${moduleAddress}::token_v1_staking::stake_token`,
     type_arguments: [],
     arguments: [stakingCreatorAddress, collectionCreatorAddress, collectionName, tokenName, propertyVersion, tokens]
 }
@@ -138,7 +138,7 @@ try {
 
 Token will be moved from resource account staker address, stop staking and claim current pending reward.
            
-Arguments: `staker: &signer, staking_creator_addr: address, collection_creator_addr: address, collection_name: String, token_name: String, property_version: u64`
+Arguments: `staker: &signer, staking_creator_addr: address, collection_owner_addr: address, collection_name: String, token_name: String, property_version: u64`
 
 Type Arguments: `CoinType` that was used during staking init.
 
@@ -154,7 +154,7 @@ const collectionCreatorAddress = "0x2"
 
 const payload = {
     type: "entry_function_payload",
-    function: `${moduleAddress}::nft_staking::unstake_token`,
+    function: `${moduleAddress}::token_v1_staking::unstake_token`,
     type_arguments: [RewardCoinType],
     arguments: [stakingCreatorAddress, collectionCreatorAddress, collectionName, tokenName, propertyVersion]
 }
@@ -170,7 +170,7 @@ try {
 
 Claim current pending reward to staker address based on rph rate.
 
-Arguments: `staker: &signer, staking_creator_addr: address, collection_creator_addr: address, collection_name: String, token_name: String, property_version: u64`
+Arguments: `staker: &signer, staking_creator_addr: address, collection_owner_addr: address, collection_name: String, token_name: String, property_version: u64`
 
 Type Arguments: `CoinType` that was used during staking init.
 
@@ -186,7 +186,7 @@ const collectionCreatorAddress = "0x2"
 
 const payload = {
     type: "entry_function_payload",
-    function: `${moduleAddress}::nft_staking::claim_reward`,
+    function: `${moduleAddress}::token_v1_staking::claim_reward`,
     type_arguments: [rewardCoinType],
     arguments: [stakingCreatorAddress, collectionCreatorAddress, collectionName, tokenName, propertyVersion],
 }
@@ -214,7 +214,7 @@ const tokenName = "Token 1";
 const stakingCreatorAddress = "0x1";
 
 const payload = {
-    function: `${moduleAddress}::nft_staking::get_unclaimed_reward`,
+    function: `${moduleAddress}::token_v1_staking::get_unclaimed_reward`,
     type_arguments: [],
     arguments: [account.address, stakingCreatorAddress, collectionName, tokenName]
 }
@@ -237,7 +237,7 @@ Usage:
 
 ```js
 const payload = {
-    function: `${moduleAddress}::nft_staking::get_tokens_staking_statuses`,
+    function: `${moduleAddress}::token_v1_staking::get_tokens_staking_statuses`,
     type_arguments: [],
     arguments: [account.address]
 }
@@ -269,7 +269,7 @@ Customization:
 Create and enable staking for new collection, set default reward per hour for staking 1 token and transfer initial amount of coins to rewards treasury.
 Staking creator can be anyone, not only the creator of the collection.
 
-Arguments: `staking_creator: &signer, collection_creator_addr: address, rph: u64, collection_name: String, total_amount: u64`
+Arguments: `staking_creator: &signer, collection_owner_addr: address, rph: u64, collection_name: String, total_amount: u64`
 
 Type Arguments: any `CoinType` which will be used as a reward coin
 
@@ -285,7 +285,7 @@ const decimals = 8;
 
 const payload = {
     type: "entry_function_payload",
-    function: `${moduleAddress}::upgradable_nft_staking::create_staking`,
+    function: `${moduleAddress}::upgradable_token_v1_staking::create_staking`,
     type_arguments: [rewardCoinType],
     arguments: [collectionOwnerAddress, tokensPerHour * (10 ** decimals), CollectionName, treasuryCoins * (10 ** decimals)],
 }
@@ -302,7 +302,7 @@ try {
 
 Token will be moved from sender address to resource account, emit `StakeEvent` and start receiving rewards for staking.
 
-Arguments: `staker: &signer, staking_creator_addr: address, collection_creator_addr: address, collection_name: String, token_name: String, property_version: u64, tokens: u64`
+Arguments: `staker: &signer, staking_creator_addr: address, collection_owner_addr: address, collection_name: String, token_name: String, property_version: u64, tokens: u64`
 
 Usage:
 
@@ -316,7 +316,7 @@ const tokens = "1"; // set a number of tokens you want to stake
 
 const payload = {
     type: "entry_function_payload",
-    function: `${moduleAddress}::upgradable_nft_staking::stake_token`,
+    function: `${moduleAddress}::upgradable_token_v1_staking::stake_token`,
     type_arguments: [],
     arguments: [stakingCreatorAddress, collectionOwnerAddress, collectionName, tokenName, propertyVersion, tokens]
 }
@@ -332,7 +332,7 @@ try {
 
 Token will be moved from resource account staker address, emit `UnstakeEvent`, stop staking and claim current pending reward.
 
-Arguments: `staker: &signer, staking_creator_addr: address, collection_creator_addr: address, collection_name: String, token_name: String, property_version: u64`
+Arguments: `staker: &signer, staking_creator_addr: address, collection_owner_addr: address, collection_name: String, token_name: String, property_version: u64`
 
 Type Arguments: `CoinType` that was used during staking init.
 
@@ -348,7 +348,7 @@ const rewardCoinType = `${moduleAddress}::mint_coins::Minerals`; // might be apt
 
 const payload = {
     type: "entry_function_payload",
-    function: `${moduleAddress}::upgradable_nft_staking::unstake_token`,
+    function: `${moduleAddress}::upgradable_token_v1_staking::unstake_token`,
     type_arguments: [RewardCoinType],
     arguments: [stakingCreatorAddress, collectionOwnerAddress, collectionName, tokenName, propertyVersion]
 }
@@ -365,7 +365,7 @@ try {
 Emit `ClaimEvent` and claim current pending reward to staker address based on Token level.
 Token level - is a miltiplier for basic (setted during staking init) reward per hour. So, if you set reward per hour to 10, but stake Token with level 2 - you will get 20 (10 * 2) coins per hour.
 
-Arguments: `staker: &signer, staking_creator_addr: address, collection_creator_addr: address,  collection_name: String, token_name: String, property_version: u64`
+Arguments: `staker: &signer, staking_creator_addr: address, collection_owner_addr: address,  collection_name: String, token_name: String, property_version: u64`
 
 Type Arguments: `CoinType` that was used during staking init.
 
@@ -381,7 +381,7 @@ const rewardCoinType = `${moduleAddress}::mint_coins::Minerals`; // might be apt
 
 const payload = {
     type: "entry_function_payload",
-    function: `${moduleAddress}::upgradable_nft_staking::claim_reward`,
+    function: `${moduleAddress}::upgradable_token_v1_staking::claim_reward`,
     type_arguments: [rewardCoinType],
     arguments: [stakingCreatorAddress, collectionOwnerAddress, collectionName, tokenName, propertyVersion],
 }
@@ -399,7 +399,7 @@ try {
 
 Return number of unclaimed coins for the staked token.
 
-Arguments: `staker_addr: address, staking_creator_addr: address, collection_creator_addr: address, collection_name: String, token_name: String, property_version: u64`
+Arguments: `staker_addr: address, staking_creator_addr: address, collection_owner_addr: address, collection_name: String, token_name: String, property_version: u64`
 
 Usage:
 
@@ -411,7 +411,7 @@ const stakingCreatorAddress = "0x1";
 const collectionOwnerAddress = "0x2";
 
 const payload = {
-    function: `${moduleAddress}::upgradable_nft_staking::get_unclaimed_reward`,
+    function: `${moduleAddress}::upgradable_token_v1_staking::get_unclaimed_reward`,
     type_arguments: [],
     arguments: [account.address, stakingCreatorAddress, collectionOwnerAddress, collectionName, tokenName, propertyVersion]
 }
@@ -434,7 +434,7 @@ Usage:
 
 ```js
 const payload = {
-    function: `${moduleAddress}::upgradable_nft_staking::get_tokens_staking_statuses`,
+    function: `${moduleAddress}::upgradable_token_v1_staking::get_tokens_staking_statuses`,
     type_arguments: [],
     arguments: [account.address]
 }
@@ -476,7 +476,7 @@ ClaimEvent {
 Usage (example with claim events, but you can change `claim_event` to `unstake_events` or `stake_events`)
 
 ```js
-const stakingEventStore = `${moduleAddress}::upgradable_nft_staking::StakingEventStore`
+const stakingEventStore = `${moduleAddress}::upgradable_token_v1_staking::StakingEventStore`
 
 try {
     const claimEvents = await client.getEventsByEventHandle(account.address, stakingEventStore, "claim_events")

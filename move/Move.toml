@@ -1,5 +1,5 @@
 [package]
-name = 'nft_staking'
+name = 'token_v1_staking'
 version = '1.0.0'
 
 [dependencies.AptosFramework]

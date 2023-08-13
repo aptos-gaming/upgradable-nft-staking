@@ -10,7 +10,7 @@ import useSelectedToken from './context/useSelectedToken'
 import useCollectionOwner from './context/useCollectionOwner'
 import CONFIG from "./config.json"
 
-const PackageName = "nft_staking";
+const PackageName = "token_v1_staking";
 
 const DevnetClientUrl = "https://fullnode.devnet.aptoslabs.com/v1"
 const TestnetClientUrl = "https://fullnode.testnet.aptoslabs.com"
@@ -36,7 +36,7 @@ interface ClaimEvent {
   }
 }
 
-const BasicNftStakingLayout = () => {
+const TokenV1Layout = () => {
   const { account, signAndSubmitTransaction } = useWallet()
   const { selectedToken, setSelectedToken } = useSelectedToken()
   const [claimEvents, setClaimEvents] = useState<ClaimEvent[]>([])
@@ -70,7 +70,7 @@ const BasicNftStakingLayout = () => {
       type: "entry_function_payload",
       function: `${CONFIG.moduleAddress}::${PackageName}::create_staking`,
       type_arguments: [RewardCoinType],
-      // collection_creator_addr, dpr, collection_name, total_amount
+      // collection_owner_addr, dpr, collection_name, total_amount
       arguments: [collectionOwnerAddress, tokensPerHour * (10 ** Decimals), CONFIG.collectionName, amountToTreasury * 10 ** Decimals],
     }
     try {
@@ -87,7 +87,7 @@ const BasicNftStakingLayout = () => {
       type: "entry_function_payload",
       function: `${CONFIG.moduleAddress}::${PackageName}::stake_token`,
       type_arguments: [],
-      // staking_creator_addr, collection_creator_addr, collection_name, token_name, property_version, tokens
+      // staking_creator_addr, collection_owner_addr, collection_name, token_name, property_version, tokens
       arguments: [CONFIG.moduleAddress, collectionOwnerAddress, CONFIG.collectionName, selectedToken?.name, selectedToken?.property_version, "1"]
     }
     try {
@@ -107,7 +107,7 @@ const BasicNftStakingLayout = () => {
       type: "entry_function_payload",
       function: `${CONFIG.moduleAddress}::${PackageName}::unstake_token`,
       type_arguments: [RewardCoinType],
-      // staking_creator_addr, collection_creator_addr, collection_name, token_name, property_version
+      // staking_creator_addr, collection_owner_addr, collection_name, token_name, property_version
       arguments: [CONFIG.moduleAddress, collectionOwnerAddress, CONFIG.collectionName, selectedToken?.name, selectedToken?.property_version]
     }
     try {
@@ -127,7 +127,7 @@ const BasicNftStakingLayout = () => {
       type: "entry_function_payload",
       function: `${CONFIG.moduleAddress}::${PackageName}::claim_reward`,
       type_arguments: [RewardCoinType],
-      // staking_creator_addr, collection_creator_addr, collection_name, token_name, property_version
+      // staking_creator_addr, collection_owner_addr, collection_name, token_name, property_version
       arguments: [CONFIG.moduleAddress, collectionOwnerAddress, selectedToken?.collection_name, selectedToken?.name, selectedToken?.property_version],
     }
     try {
@@ -178,7 +178,7 @@ const BasicNftStakingLayout = () => {
   }
 
   useEffect(() => {
-    if (selectedToken && selectedToken.packageName === "nft_staking") {
+    if (selectedToken && selectedToken.packageName === "token_v1_staking") {
       getUnclaimedReward(selectedToken)
     }
   }, [selectedToken])
@@ -203,7 +203,7 @@ const BasicNftStakingLayout = () => {
       <EventsTable data={claimEvents} title="Basic Token Staking" />
       <Modal
         title="Basic Staking Actions"
-        open={!!selectedToken && selectedToken.packageName === "nft_staking"}
+        open={!!selectedToken && selectedToken.packageName === "token_v1_staking"}
         footer={null}
         onCancel={() => {
           setSelectedToken(null)
@@ -243,4 +243,4 @@ const BasicNftStakingLayout = () => {
   )
 }
 
-export default BasicNftStakingLayout
+export default TokenV1Layout

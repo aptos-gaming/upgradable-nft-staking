@@ -1,4 +1,4 @@
-module owner_addr::nft_staking {
+module owner_addr::token_v1_staking {
   use std::string::{ Self, String };
   use std::bcs::to_bytes;
   use std::signer;
@@ -169,10 +169,10 @@ module owner_addr::nft_staking {
   // create new resource_account with staking_treasury and ResourceStaking resource
   // and also send some initial Coins to staking_tresury account
   public entry fun create_staking<CoinType>(
-    staking_creator: &signer, collection_creator_addr: address, rph: u64, collection_name: String, total_amount: u64,
+    staking_creator: &signer, collection_owner_addr: address, rph: u64, collection_name: String, total_amount: u64,
   ) acquires ResourceInfo {
     // check that creator has the collection
-    assert!(token::check_collection_exists(collection_creator_addr, collection_name), ENO_COLELCTION);
+    assert!(token::check_collection_exists(collection_owner_addr, collection_name), ENO_COLELCTION);
 
     // create new staking resource account
     // this resource account will store funds data and Staking resource
@@ -202,15 +202,15 @@ module owner_addr::nft_staking {
 
   // move nft from sender (staker) to resource account and start staking
   public entry fun stake_token(
-    staker: &signer, staking_creator_addr: address, collection_creator_addr: address, collection_name: String, token_name: String, property_version: u64, tokens: u64,
+    staker: &signer, staking_creator_addr: address, collection_owner_addr: address, collection_name: String, token_name: String, property_version: u64, tokens: u64,
   ) acquires ResourceReward, ResourceStaking, ResourceInfo, StakingEventStore, StakingStatusInfo {
     let staker_addr = signer::address_of(staker);
     
-    let token_id = token::create_token_id_raw(collection_creator_addr, collection_name, token_name, property_version);
+    let token_id = token::create_token_id_raw(collection_owner_addr, collection_name, token_name, property_version);
     // check that signer has token on balance
     assert!(token::balance_of(staker_addr, token_id) >= tokens, ENO_TOKEN_IN_TOKEN_STORE);
     // check that creator has collection
-    assert!(token::check_collection_exists(collection_creator_addr, collection_name), ENO_COLELCTION);
+    assert!(token::check_collection_exists(collection_owner_addr, collection_name), ENO_COLELCTION);
     // check if creator start staking or not
     // staking can be initiated, but stopped later
     let staking_address = get_resource_address(staking_creator_addr, collection_name);
@@ -319,7 +319,7 @@ module owner_addr::nft_staking {
 
   // same as unstake but without final sending of token and updating staking data
   public entry fun claim_reward<CoinType>(
-    staker: &signer, staking_creator_addr: address, collection_creator_addr: address, collection_name: String, token_name: String, property_version: u64,
+    staker: &signer, staking_creator_addr: address, collection_owner_addr: address, collection_name: String, token_name: String, property_version: u64,
   ) acquires ResourceReward, ResourceStaking, ResourceInfo, StakingEventStore {
     let staker_addr = signer::address_of(staker);
 
@@ -345,7 +345,7 @@ module owner_addr::nft_staking {
     // check that staker address stored inside Reward staker
     assert!(reward_data.staker == staker_addr, ENO_STAKER_MISMATCH);
 
-    let token_id = token::create_token_id_raw(collection_creator_addr, collection_name, token_name, property_version);
+    let token_id = token::create_token_id_raw(collection_owner_addr, collection_name, token_name, property_version);
 
     // calculate reward
     let release_amount = calculate_reward(staking_data.rph, reward_data.start_time, reward_data.tokens, reward_data.withdraw_amount);
@@ -385,7 +385,7 @@ module owner_addr::nft_staking {
 
   // send token from resource account back to staker and claim all pending reward
   public entry fun unstake_token<CoinType>(
-    staker: &signer, staking_creator_addr: address, collection_creator_addr: address, collection_name: String, token_name: String, property_version: u64,
+    staker: &signer, staking_creator_addr: address, collection_owner_addr: address, collection_name: String, token_name: String, property_version: u64,
   ) acquires ResourceReward, ResourceStaking, ResourceInfo, StakingStatusInfo, StakingEventStore {
     let staker_addr = signer::address_of(staker);
 
@@ -418,7 +418,7 @@ module owner_addr::nft_staking {
     // check if address of CoinType that we want to withward are equal to CoinType address stored in staking_data
     assert!(coin_address<CoinType>() == staking_data.coin_type, ECOIN_TYPE_MISMATCH); 
     // create TokenId
-    let token_id = token::create_token_id_raw(collection_creator_addr, collection_name, token_name, property_version);
+    let token_id = token::create_token_id_raw(collection_owner_addr, collection_name, token_name, property_version);
 
     // check if reward_treasury_addr (resource account of staker) cointains token that we want to withdraw
     let token_balance = token::balance_of(reward_treasury_addr, token_id);

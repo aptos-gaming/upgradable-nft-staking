@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { TokenData } from '../components/NftList'
 
 type TokenDataWithPackage = TokenData & {
-  packageName?: 'upgradable_nft_staking' | 'nft_staking'
+  packageName?: 'upgradable_token_v1_staking' | 'token_v1_staking'
 }
 
 export interface ISelectedTokenContext {

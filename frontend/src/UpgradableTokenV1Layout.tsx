@@ -11,7 +11,7 @@ import { TokenData } from './components/NftList'
 import EventsTable from './components/EventsTable'
 import CONFIG from "./config.json"
 
-const PackageName = "upgradable_nft_staking";
+const PackageName = "upgradable_token_v1_staking";
 
 const DevnetClientUrl = "https://fullnode.devnet.aptoslabs.com/v1"
 const TestnetClientUrl = "https://fullnode.testnet.aptoslabs.com"
@@ -37,7 +37,7 @@ interface ClaimEvent {
   }
 }
 
-const UpgradableNftStakingLayout = () => {
+const UpgradableTokenV1Layout = () => {
   const [unclaimedReward, setUnclaimedReward] = useState(0)
   const [claimEvents, setClaimEvents] = useState<ClaimEvent[]>([])
   const { selectedToken, setSelectedToken } = useSelectedToken()
@@ -129,7 +129,7 @@ const UpgradableNftStakingLayout = () => {
       type: "entry_function_payload",
       function: `${CONFIG.moduleAddress}::${PackageName}::stake_token`,
       type_arguments: [],
-      // staking_creator_addr, collection_creator_addr, collection_name, token_name, property_version, tokens
+      // staking_creator_addr, collection_owner_addr, collection_name, token_name, property_version, tokens
       arguments: [CONFIG.moduleAddress, collectionOwnerAddress, selectedToken?.collection_name, selectedToken?.name, String(selectedToken?.property_version), "1"]
     }
     try {
@@ -149,7 +149,7 @@ const UpgradableNftStakingLayout = () => {
       type: "entry_function_payload",
       function: `${CONFIG.moduleAddress}::${PackageName}::unstake_token`,
       type_arguments: [RewardCoinType],
-      // staking_creator_addr, collection_creator_addr, collection_name, token_name, property_version
+      // staking_creator_addr, collection_owner_addr, collection_name, token_name, property_version
       arguments: [CONFIG.moduleAddress, collectionOwnerAddress, selectedToken?.collection_name, selectedToken?.name, String(selectedToken?.property_version)]
     }
     try {
@@ -205,7 +205,7 @@ const UpgradableNftStakingLayout = () => {
     const payload = {
       function: `${CONFIG.moduleAddress}::${PackageName}::get_unclaimed_reward`,
       type_arguments: [],
-      // staker_addr, staking_creator_addr, collection_creator_addr, collection_name, token_name, property_version
+      // staker_addr, staking_creator_addr, collection_owner_addr, collection_name, token_name, property_version
       arguments: [account?.address, CONFIG.moduleAddress, collectionOwnerAddress, token?.collection_name, token?.name, String(token?.property_version)]
     }
 
@@ -219,7 +219,7 @@ const UpgradableNftStakingLayout = () => {
   }
 
   useEffect(() => {
-    if (selectedToken && selectedToken.packageName === "upgradable_nft_staking") {
+    if (selectedToken && selectedToken.packageName === "upgradable_token_v1_staking") {
       getUnclaimedReward(selectedToken)
     }
   }, [selectedToken])
@@ -260,7 +260,7 @@ const UpgradableNftStakingLayout = () => {
         <EventsTable data={claimEvents} title="Upgradable Token Staking" />
         <Modal
           title="Upgradable Staking Actions"
-          open={!!selectedToken && selectedToken.packageName === "upgradable_nft_staking"}
+          open={!!selectedToken && selectedToken.packageName === "upgradable_token_v1_staking"}
           footer={null}
           onCancel={() => {
             setSelectedToken(null)
@@ -309,4 +309,4 @@ const UpgradableNftStakingLayout = () => {
   )
 }
 
-export default UpgradableNftStakingLayout
+export default UpgradableTokenV1Layout

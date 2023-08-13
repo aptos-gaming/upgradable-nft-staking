@@ -1,7 +1,7 @@
 import React from 'react'
 import { Table } from 'antd'
 
-const Decimals = 8 // wood and aptos has same decimals - 8
+const Decimals = 8
 
 const columns = [
   {
