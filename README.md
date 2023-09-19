@@ -18,14 +18,14 @@ To stake:
 
 
 Modules 
-- MintCoins.move - module that init new coin - Minerals and mint 100k to owner address
-- MintNFTs.move - module that create resource account, that creates collection and mint 10 nfts to owner address, also contains `upgrade_token` method
-- NftStaking.move - basic staking module based on dph reward for each NFT
-- UpgradableNftStaking.move - advanced NFT staking module, that calculate reward based on token "level" property
+- mint_coins.move - module that init new coin - Minerals and mint 100k to owner address
+- mint_upgrade_tokens_v1.move - module that create resource account, that creates collection and mint 10 nfts to owner address, also contains `upgrade_token` method
+- token_v1_staking.move - basic staking module based on dph reward for each NFT
+- upgradable_token_v1_staking.move - advanced NFT staking module, that calculate reward based on token "level" property
+- mint_stake_upgrade_tokens_v2.move - mint tokensV2 and have advanced NFT staking module, that calculate reward based on token "level" property for tokenV2
 
 #### Deployed Modules on Testnet can be found here:
 [0f663e428a90eb3f7a485383a54511720e69a92d52e12d2d06fcc2af0bb3897e](https://explorer.aptoslabs.com/account/0f663e428a90eb3f7a485383a54511720e69a92d52e12d2d06fcc2af0bb3897e?network=testnet)
-
 
 
 # MintNFTS
@@ -258,8 +258,8 @@ try {
 Module will work only for tokens that have `level` properties, if you dont need such feature - just use a basic `NftStaking` module.
 
 Customization:
-- if you want to change main token property name, open `UpgradableNftStaking.move` and change `level`  in `get_nft_lvl` function.
-- if you want to change reward calculation for different levels, open `UpgradableNftStaking.move` and change calculation of reward in `calculate_reward` function.
+- if you want to change main token property name, open `upgradable_token_v1_staking.move` and change `level`  in `get_nft_lvl` function.
+- if you want to change reward calculation for different levels, open `upgradable_token_v1_staking.move` and change calculation of reward in `calculate_reward` function.
 
 
 ## Entrypoints
